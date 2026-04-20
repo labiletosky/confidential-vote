@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ConfidentialVote — Private DAO Governance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #080b10;
+      --surface:   #0e1318;
+      --border:    #1c2430;
+      --accent:    #00e5ff;
+      --accent2:   #7b61ff;
+      --danger:    #ff4d6d;
+      --success:   #00ffb2;
+      --text:      #d6e4f0;
+      --muted:     #4a6275;
+      --mono:      'Space Mono', monospace;
+      --sans:      'Syne', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Grid noise texture overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% 20%, rgba(0,229,255,0.04) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 60% at 80% 80%, rgba(123,97,255,0.05) 0%, transparent 60%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── Scan line effect ── */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none; z-index: 1;
+    }
+
+    /* ── Header ── */
+    header {
+      position: relative; z-index: 10;
+      border-bottom: 1px solid var(--border);
+      padding: 1.2rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .logo h1 {
+      font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .logo span {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--accent);
+      display: block;
+      letter-spacing: 0.1em;
+    }
+
+    .header-right {
+      display: flex; align-items: center; gap: 1rem;
+    }
+
+    .network-badge {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--success);
+      background: rgba(0,255,178,0.08);
+      border: 1px solid rgba(0,255,178,0.2);
+      padding: 0.3rem 0.75rem;
+      border-radius: 100px;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Connect button ── */
+    .btn-connect {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 0.5rem 1.2rem;
+      border-radius: 6px;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: all 0.2s;
+    }
+    .btn-connect:hover { background: rgba(0,229,255,0.1); }
+    .btn-connect.connected {
+      border-color: var(--success);
+      color: var(--success);
+      background: rgba(0,255,178,0.06);
+    }
+
+    /* ── Layout ── */
+    main {
+      position: relative; z-index: 10;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    @media (max-width: 760px) {
+      main { grid-template-columns: 1fr; padding: 1.5rem 1rem; }
+    }
+
+    /* ── Section labels ── */
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: rgba(0,229,255,0.2); }
+
+    /* ── Proposal list ── */
+    .proposal-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+
+    .proposal-title {
+      font-size: 1rem; font-weight: 700;
+      color: #fff; line-height: 1.3;
+    }
+
+    .status-badge {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      padding: 0.25rem 0.6rem;
+      border-radius: 100px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-left: 0.75rem;
+    }
+    .status-open   { background: rgba(0,229,255,0.1); color: var(--accent); border: 1px solid rgba(0,229,255,0.25); }
+    .status-closed { background: rgba(74,98,117,0.2); color: var(--muted);  border: 1px solid var(--border); }
+    .status-passed { background: rgba(0,255,178,0.1); color: var(--success);border: 1px solid rgba(0,255,178,0.25); }
+    .status-failed { background: rgba(255,77,109,0.1); color: var(--danger); border: 1px solid rgba(255,77,109,0.25); }
+
+    .proposal-desc {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .proposal-meta {
+      display: flex; gap: 1.5rem; flex-wrap: wrap;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-bottom: 1.2rem;
+    }
+    .proposal-meta span { display: flex; align-items: center; gap: 0.35rem; }
+
+    /* ── Vote buttons ── */
+    .vote-row {
+      display: flex; gap: 0.75rem;
+    }
+
+    .btn-yes, .btn-no, .btn-reveal, .btn-primary {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      padding: 0.55rem 1.2rem;
+      border-radius: 7px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 700;
+    }
+
+    .btn-yes {
+      background: rgba(0,255,178,0.12);
+      color: var(--success);
+      border: 1px solid rgba(0,255,178,0.3);
+    }
+    .btn-yes:hover { background: rgba(0,255,178,0.2); }
+
+    .btn-no {
+      background: rgba(255,77,109,0.1);
+      color: var(--danger);
+      border: 1px solid rgba(255,77,109,0.25);
+    }
+    .btn-no:hover { background: rgba(255,77,109,0.18); }
+
+    .btn-reveal {
+      background: rgba(123,97,255,0.12);
+      color: var(--accent2);
+      border: 1px solid rgba(123,97,255,0.3);
+    }
+    .btn-reveal:hover { background: rgba(123,97,255,0.22); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #000;
+      font-weight: 800;
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 0.78rem;
+      border-radius: 8px;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+
+    .voted-tag {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      padding: 0.5rem 0;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Encryption indicator ── */
+    .enc-indicator {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--muted);
+      margin-top: 0.75rem;
+    }
+    .enc-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent2);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    /* ── Right panel — Create Proposal ── */
+    .panel {
+      position: sticky; top: 2rem;
+    }
+
+    .panel .card { margin-bottom: 0; }
+
+    .panel h2 {
+      font-size: 0.95rem; font-weight: 800;
+      color: #fff;
+      margin-bottom: 1.2rem;
+    }
+
+    /* ── Form ── */
+    .field { margin-bottom: 1rem; }
+
+    label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      padding: 0.65rem 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+    }
+    textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+
+    /* ── FHE info box ── */
+    .fhe-info {
+      background: linear-gradient(135deg, rgba(0,229,255,0.05), rgba(123,97,255,0.05));
+      border: 1px solid rgba(0,229,255,0.15);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-top: 1.2rem;
+    }
+    .fhe-info h3 {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+    .fhe-info p {
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── Toast notifications ── */
+    #toast-container {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      z-index: 1000;
+      display: flex; flex-direction: column; gap: 0.5rem;
+    }
+    .toast {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      padding: 0.75rem 1.2rem;
+      border-radius: 8px;
+      max-width: 320px;
+      animation: slideIn 0.3s ease;
+    }
+    .toast-success { background: rgba(0,255,178,0.12); border: 1px solid rgba(0,255,178,0.3); color: var(--success); }
+    .toast-error   { background: rgba(255,77,109,0.12); border: 1px solid rgba(255,77,109,0.3); color: var(--danger); }
+    .toast-info    { background: rgba(0,229,255,0.1);  border: 1px solid rgba(0,229,255,0.25); color: var(--accent); }
+
+    @keyframes slideIn {
+      from { transform: translateX(110%); opacity: 0; }
+      to   { transform: translateX(0);   opacity: 1; }
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--muted);
+    }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.4; }
+    .empty-state p { font-size: 0.82rem; line-height: 1.6; }
+
+    /* ── Loading spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(0,229,255,0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 0.4rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Result reveal bar ── */
+    .result-bar {
+      margin-top: 0.75rem;
+      background: rgba(255,255,255,0.04);
+      border-radius: 100px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .result-fill {
+      height: 100%;
+      border-radius: 100px;
+      transition: width 1s ease;
+    }
+    .result-fill.yes { background: var(--success); }
+    .result-fill.no  { background: var(--danger); }
+
+    .result-label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      margin-top: 0.5rem;
+      color: var(--text);
+    }
+
+    /* ── Divider ── */
+    hr { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: flex; gap: 1.5rem;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .stats-bar .stat-val {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: var(--sans);
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🗳</div>
+      <div>
+        <h1>ConfidentialVote</h1>
+        <span>POWERED BY ZAMA fhEVM</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="network-badge">⬡ SEPOLIA TESTNET</div>
+      <button class="btn-connect" id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
+    </div>
+  </header>
+
+  <!-- Main layout -->
+  <main>
+
+    <!-- Left: Proposals -->
+    <div>
+      <div class="section-label">// Active &amp; Past Proposals</div>
+
+      <div class="stats-bar" id="statsBar">
+        <div><span class="stat-val" id="statTotal">0</span>TOTAL PROPOSALS</div>
+        <div><span class="stat-val" id="statOpen">0</span>OPEN VOTES</div>
+        <div><span class="stat-val" id="statVoters">0</span>VOTES CAST</div>
+      </div>
+
+      <div id="proposalList">
+        <div class="empty-state">
+          <div class="icon">🔒</div>
+          <p>No proposals yet.<br/>Connect your wallet and create the first one.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Create Proposal -->
+    <div class="panel">
+      <div class="section-label">// New Proposal</div>
+      <div class="card">
+        <h2>Create Proposal</h2>
+
+        <div class="field">
+          <label>PROPOSAL TITLE</label>
+          <input type="text" id="propTitle" placeholder="e.g. Allocate 5 ETH to dev fund" maxlength="80" />
+        </div>
+
+        <div class="field">
+          <label>DESCRIPTION</label>
+          <textarea id="propDesc" placeholder="Describe what this proposal is about and why it matters..."></textarea>
+        </div>
+
+        <div class="field">
+          <label>VOTING DURATION</label>
+          <select id="propDuration">
+            <option value="300">5 minutes (demo)</option>
+            <option value="3600">1 hour</option>
+            <option value="86400" selected>1 day</option>
+            <option value="259200">3 days</option>
+            <option value="604800">7 days</option>
+          </select>
+        </div>
+
+        <button class="btn-primary" onclick="createProposal()">
+          🔐 Create Encrypted Proposal
+        </button>
+
+        <div class="fhe-info">
+          <h3>⚡ HOW IT WORKS</h3>
+          <p>
+            Your vote is encrypted client-side using Zama's fhEVM before it ever hits the chain.
+            No one — not validators, not the contract creator — can see the tally until the deadline.
+            Results are revealed via the Zama Gateway using threshold MPC decryption.
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast container -->
+  <div id="toast-container"></div>
+
+  <!-- fhevmjs SDK (loads from CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/fhevmjs@0.6.0/bundle/fhevm.min.js" onerror="onSdkError()"></script>
+
+  <script>
+    // ─── State ─────────────────────────────────────────────────────────────────
+
+    const CONTRACT_ADDRESS = "0x1e9B11f935c88F4B7eD5175B89E75c003cE0128c"; // ← replace after deploy
+    const SEPOLIA_CHAIN_ID = "0xaa36a7"; // 11155111
+
+    let provider    = null;
+    let signer      = null;
+    let account     = null;
+    let fhevmInstance = null;
+
+    // Local mock proposal store (bridges UI before/after chain reads)
+    let proposals = [];
+    let totalVotesCast = 0;
+
+    // Minimal ABI for our contract
+    const ABI = [
+      "function proposalCount() view returns (uint256)",
+      "function createProposal(string,string,uint256) returns (uint256)",
+      "function castVote(uint256,bytes32,bytes) external",
+      "function requestResult(uint256) external",
+      "function getProposal(uint256) view returns (string,string,address,uint256,uint32,bool,bool)",
+      "function isVotingOpen(uint256) view returns (bool)",
+      "function hasVoted(uint256,address) view returns (bool)",
+      "event ProposalCreated(uint256 indexed,string,address,uint256)",
+      "event VoteCast(uint256 indexed,address indexed)",
+      "event ResultRevealed(uint256 indexed,bool,uint32)"
+    ];
+
+    // ─── Wallet Connection ──────────────────────────────────────────────────────
+
+    async function connectWallet() {
+      if (!window.ethereum) {
+        toast("MetaMask not detected. Please install it.", "error");
+        return;
+      }
+
+      try {
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        account = accounts[0];
+
+        // Switch to Sepolia
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: SEPOLIA_CHAIN_ID }]
+          });
+        } catch (e) {
+          toast("Please switch to Sepolia testnet manually.", "error");
+          return;
+        }
+
+        updateConnectButton();
+        toast(`Connected: ${shortAddr(account)}`, "success");
+        await initFhevm();
+        await loadProposals();
+
+      } catch (e) {
+        toast("Connection rejected.", "error");
+      }
+    }
+
+    function updateConnectButton() {
+      const btn = document.getElementById("connectBtn");
+      if (account) {
+        btn.textContent = shortAddr(account);
+        btn.classList.add("connected");
+      }
+    }
+
+    // ─── fhEVM Init ─────────────────────────────────────────────────────────────
+
+    async function initFhevm() {
+      try {
+        if (window.fhevm) {
+          fhevmInstance = await window.fhevm.createInstance({ chainId: 11155111 });
+          toast("fhEVM encryption ready ✓", "info");
+        }
+      } catch (e) {
+        console.warn("fhEVM SDK not loaded — running in demo mode", e);
+      }
+    }
+
+    function onSdkError() {
+      console.warn("fhevmjs CDN failed — demo mode active");
+    }
+
+    // ─── Load Proposals from Chain ──────────────────────────────────────────────
+
+    async function loadProposals() {
+      if (!window.ethereum || !account) return;
+
+      try {
+        // Use ethers via CDN (loaded below)
+        const ethers = window.ethers;
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer   = await provider.getSigner();
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+
+        // Guard: skip if placeholder not replaced
+        if (CONTRACT_ADDRESS === "YOUR_DEPLOYED_CONTRACT_ADDRESS") {
+          renderDemoProposals();
+          return;
+        }
+
+        const count = Number(await contract.proposalCount());
+        proposals = [];
+        totalVotesCast = 0;
+
+        for (let i = 0; i < count; i++) {
+          const [title, description, creator, deadline, voterCount, resultRevealed, passed]
+            = await contract.getProposal(i);
+          const voted   = await contract.hasVoted(i, account);
+          const isOpen  = await contract.isVotingOpen(i);
+
+          proposals.push({
+            id: i, title, description, creator,
+            deadline: Number(deadline),
+            voterCount: Number(voterCount),
+            resultRevealed, passed, voted, isOpen
+          });
+          totalVotesCast += Number(voterCount);
+        }
+
+        renderProposals();
+        updateStats();
+
+      } catch (e) {
+        console.error(e);
+        renderDemoProposals();
+      }
+    }
+
+    // ─── Create Proposal ────────────────────────────────────────────────────────
+
+    async function createProposal() {
+      if (!account) { toast("Connect wallet first.", "error"); return; }
+
+      const title    = document.getElementById("propTitle").value.trim();
+      const desc     = document.getElementById("propDesc").value.trim();
+      const duration = parseInt(document.getElementById("propDuration").value);
+
+      if (!title) { toast("Title is required.", "error"); return; }
+      if (!desc)  { toast("Description is required.", "error"); return; }
+
+      if (CONTRACT_ADDRESS === "YOUR_DEPLOYED_CONTRACT_ADDRESS") {
+        // Demo mode: add locally
+        const now = Math.floor(Date.now() / 1000);
+        proposals.unshift({
+          id: proposals.length, title, description: desc,
+          creator: account,
+          deadline: now + duration,
+          voterCount: 0,
+          resultRevealed: false, passed: false,
+          voted: false, isOpen: true
+        });
+        renderProposals();
+        updateStats();
+        toast("Proposal created (demo mode — deploy contract to go live)", "info");
+        document.getElementById("propTitle").value = "";
+        document.getElementById("propDesc").value  = "";
+        return;
+      }
+
+      try {
+        const ethers   = window.ethers;
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+        toast(`<span class="spinner"></span> Submitting to Sepolia…`, "info");
+        const tx = await contract.createProposal(title, desc, duration);
+        await tx.wait();
+        toast("Proposal created on-chain ✓", "success");
+        await loadProposals();
+      } catch (e) {
+        toast("Transaction failed: " + (e.reason || e.message), "error");
+      }
+    }
+
+    // ─── Cast Vote ──────────────────────────────────────────────────────────────
+
+    async function castVote(proposalId, voteYes) {
+      if (!account) { toast("Connect wallet first.", "error"); return; }
+
+      if (CONTRACT_ADDRESS === "YOUR_DEPLOYED_CONTRACT_ADDRESS") {
+        const p = proposals.find(x => x.id === proposalId);
+        if (p) { p.voted = true; p.voterCount++; totalVotesCast++; }
+        renderProposals(); updateStats();
+        toast(`Vote cast (${voteYes ? "YES ✓" : "NO ✗"}) — encrypted in demo mode`, "success");
+        return;
+      }
+
+      try {
+        toast(`<span class="spinner"></span> Encrypting vote with fhEVM…`, "info");
+
+        let encVote, proof;
+
+        if (fhevmInstance) {
+          // Real FHE encryption via fhevmjs
+          const input = fhevmInstance.createEncryptedInput(CONTRACT_ADDRESS, account);
+          input.addBool(voteYes);
+          const encrypted = await input.encrypt();
+          encVote = encrypted.handles[0];
+          proof   = encrypted.inputProof;
+        } else {
+          // Fallback placeholder (contract will revert — for demo only)
+          encVote = ethers.zeroPadValue(ethers.toBeHex(voteYes ? 1 : 0), 32);
+          proof   = "0x";
+        }
+
+        const ethers   = window.ethers;
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+        const tx = await contract.castVote(proposalId, encVote, proof);
+        await tx.wait();
+        toast("Vote cast — encrypted on-chain ✓", "success");
+        await loadProposals();
+
+      } catch (e) {
+        toast("Vote failed: " + (e.reason || e.message), "error");
+      }
+    }
+
+    // ─── Request Result ─────────────────────────────────────────────────────────
+
+    async function requestResult(proposalId) {
+      if (!account) { toast("Connect wallet first.", "error"); return; }
+
+      if (CONTRACT_ADDRESS === "YOUR_DEPLOYED_CONTRACT_ADDRESS") {
+        const p = proposals.find(x => x.id === proposalId);
+        if (p) { p.resultRevealed = true; p.passed = Math.random() > 0.4; p.isOpen = false; }
+        renderProposals();
+        toast("Result revealed (demo mode)", "success");
+        return;
+      }
+
+      try {
+        const ethers   = window.ethers;
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+        toast(`<span class="spinner"></span> Requesting Gateway decryption…`, "info");
+        const tx = await contract.requestResult(proposalId);
+        await tx.wait();
+        toast("Decryption requested — result will appear shortly ✓", "success");
+        setTimeout(() => loadProposals(), 5000);
+      } catch (e) {
+        toast("Failed: " + (e.reason || e.message), "error");
+      }
+    }
+
+    // ─── Render ─────────────────────────────────────────────────────────────────
+
+    function renderProposals() {
+      const list = document.getElementById("proposalList");
+      if (!proposals.length) {
+        list.innerHTML = `<div class="empty-state"><div class="icon">🔒</div><p>No proposals yet.<br/>Connect your wallet and create the first one.</p></div>`;
+        return;
+      }
+
+      list.innerHTML = proposals.map(p => {
+        const now = Math.floor(Date.now() / 1000);
+        const timeLeft = p.deadline - now;
+        const timeStr  = timeLeft > 0 ? formatDuration(timeLeft) : "Ended";
+
+        let statusBadge, actionHtml;
+
+        if (p.resultRevealed) {
+          const label = p.passed ? "PASSED" : "FAILED";
+          const cls   = p.passed ? "status-passed" : "status-failed";
+          statusBadge = `<span class="status-badge ${cls}">${label}</span>`;
+          actionHtml  = `
+            <div class="result-label">${p.passed ? "✅ Proposal passed" : "❌ Proposal rejected"} — ${p.voterCount} votes cast</div>
+            <div class="result-bar"><div class="result-fill ${p.passed ? 'yes' : 'no'}" style="width:${p.passed ? 70 : 30}%"></div></div>
+          `;
+        } else if (p.isOpen && timeLeft > 0) {
+          statusBadge = `<span class="status-badge status-open">VOTING OPEN</span>`;
+          if (p.voted) {
+            actionHtml = `<div class="voted-tag">✓ You voted — tallies encrypted until deadline</div>`;
+          } else {
+            actionHtml = `
+              <div class="vote-row">
+                <button class="btn-yes" onclick="castVote(${p.id}, true)">🔐 Vote YES</button>
+                <button class="btn-no"  onclick="castVote(${p.id}, false)">🔐 Vote NO</button>
+              </div>
+            `;
+          }
+        } else {
+          statusBadge = `<span class="status-badge status-closed">CLOSED</span>`;
+          actionHtml  = `<button class="btn-reveal" onclick="requestResult(${p.id})">🔓 Reveal Result via Gateway</button>`;
+        }
+
+        return `
+          <div class="card">
+            <div class="proposal-header">
+              <div class="proposal-title">${escHtml(p.title)}</div>
+              ${statusBadge}
+            </div>
+            <div class="proposal-desc">${escHtml(p.description)}</div>
+            <div class="proposal-meta">
+              <span>👤 ${shortAddr(p.creator)}</span>
+              <span>🗳 ${p.voterCount} votes</span>
+              <span>⏱ ${timeStr}</span>
+            </div>
+            ${actionHtml}
+            <div class="enc-indicator">
+              <div class="enc-dot"></div>
+              Tallies encrypted with Zama fhEVM · FHE-protected
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderDemoProposals() {
+      // Seed with illustrative proposals in demo mode
+      const now = Math.floor(Date.now() / 1000);
+      proposals = [
+        {
+          id: 0, title: "Allocate 5 ETH to Developer Grants Fund",
+          description: "This proposal allocates 5 ETH from the DAO treasury to fund open-source contributors working on core protocol tooling.",
+          creator: "0xdemo...1234", deadline: now + 86000,
+          voterCount: 12, resultRevealed: false, passed: false, voted: false, isOpen: true
+        },
+        {
+          id: 1, title: "Add Community Moderators to Discord",
+          description: "Elect 3 new moderators to help manage the growing community across Discord and Telegram channels.",
+          creator: "0xdemo...5678", deadline: now - 100,
+          voterCount: 28, resultRevealed: true, passed: true, voted: false, isOpen: false
+        }
+      ];
+      totalVotesCast = 40;
+      renderProposals();
+      updateStats();
+    }
+
+    function updateStats() {
+      const open = proposals.filter(p => p.isOpen && !p.resultRevealed).length;
+      document.getElementById("statTotal").textContent  = proposals.length;
+      document.getElementById("statOpen").textContent   = open;
+      document.getElementById("statVoters").textContent = totalVotesCast;
+    }
+
+    // ─── Utils ──────────────────────────────────────────────────────────────────
+
+    function shortAddr(addr) {
+      if (!addr || addr.length < 10) return addr;
+      return addr.slice(0, 6) + "…" + addr.slice(-4);
+    }
+
+    function formatDuration(secs) {
+      if (secs < 60)   return `${secs}s left`;
+      if (secs < 3600) return `${Math.floor(secs/60)}m left`;
+      if (secs < 86400)return `${Math.floor(secs/3600)}h left`;
+      return `${Math.floor(secs/86400)}d left`;
+    }
+
+    function escHtml(str) {
+      const d = document.createElement("div");
+      d.appendChild(document.createTextNode(str));
+      return d.innerHTML;
+    }
+
+    function toast(msg, type = "info") {
+      const el = document.createElement("div");
+      el.className = `toast toast-${type}`;
+      el.innerHTML = msg;
+      document.getElementById("toast-container").appendChild(el);
+      setTimeout(() => el.remove(), 4500);
+    }
+
+    // ─── Boot ───────────────────────────────────────────────────────────────────
+
+    window.addEventListener("load", async () => {
+      // Show demo proposals immediately
+      renderDemoProposals();
+
+      // Auto-reconnect if already connected
+      if (window.ethereum) {
+        const accounts = await window.ethereum.request({ method: "eth_accounts" });
+        if (accounts.length) {
+          account = accounts[0];
+          updateConnectButton();
+          await initFhevm();
+          await loadProposals();
+        }
+      }
+    });
+
+    // Listen for account changes
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", (accs) => {
+        account = accs[0] || null;
+        updateConnectButton();
+        if (account) loadProposals();
+      });
+    }
+  </script>
+
+  <!-- ethers.js v6 -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
+
+</body>
+</html>
