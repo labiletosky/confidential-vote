@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ConfidentialVote — Private DAO Governance</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗳</text></svg>">
   <!-- ethers.js v6 — must load first -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -60,9 +61,11 @@
     /* ── Header ── */
     header {
       position: relative; z-index: 10;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 2px solid rgba(0,229,255,0.3);
       padding: 1.2rem 2rem;
       display: flex; align-items: center; justify-content: space-between;
+      background: linear-gradient(90deg, rgba(0,229,255,0.06), rgba(123,97,255,0.06));
+      backdrop-filter: blur(10px);
     }
 
     .logo {
@@ -78,8 +81,11 @@
     }
 
     .logo h1 {
-      font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em;
+      font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em;
       color: #fff;
+      background: linear-gradient(90deg, #fff, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .logo span {
