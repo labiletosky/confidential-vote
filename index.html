@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ConfidentialVote — Private DAO Governance</title>
+  <!-- ethers.js v6 — must load first -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
   <style>
@@ -520,7 +522,7 @@
   <script>
     // ─── State ─────────────────────────────────────────────────────────────────
 
-    const CONTRACT_ADDRESS = "0x1e9B11f935c88F4B7eD5175B89E75c003cE0128c"; // ← replace after deploy
+    const CONTRACT_ADDRESS = "YOUR_DEPLOYED_CONTRACT_ADDRESS"; // ← replace after deploy
     const SEPOLIA_CHAIN_ID = "0xaa36a7"; // 11155111
 
     let provider    = null;
@@ -911,8 +913,6 @@
     }
   </script>
 
-  <!-- ethers.js v6 -->
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
 
 </body>
 </html>
