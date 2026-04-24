@@ -594,7 +594,22 @@
       if (account) {
         btn.textContent = shortAddr(account);
         btn.classList.add("connected");
+        btn.onclick = disconnectWallet;
+      } else {
+        btn.textContent = "Connect Wallet";
+        btn.classList.remove("connected");
+        btn.onclick = connectWallet;
       }
+    }
+
+    function disconnectWallet() {
+      account   = null;
+      provider  = null;
+      signer    = null;
+      proposals = [];
+      updateConnectButton();
+      renderDemoProposals();
+      toast("Wallet disconnected", "info");
     }
 
     // ─── fhEVM Init ─────────────────────────────────────────────────────────────
