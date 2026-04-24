@@ -544,14 +544,16 @@
     const ABI = [
       "function proposalCount() view returns (uint256)",
       "function createProposal(string,string,uint256) returns (uint256)",
-      "function castVote(uint256,bytes32,bytes) external",
-      "function requestResult(uint256) external",
+      "function commitVote(uint256,bytes32) external",
+      "function revealVote(uint256,bool,bytes32) external",
+      "function finalizeResult(uint256) external",
+      "function generateCommitHash(bool,bytes32) view returns (bytes32)",
       "function getProposal(uint256) view returns (string,string,address,uint256,uint32,bool,bool)",
       "function isVotingOpen(uint256) view returns (bool)",
-      "function hasVoted(uint256,address) view returns (bool)",
+      "function hasCommitted(uint256,address) view returns (bool)",
       "event ProposalCreated(uint256 indexed,string,address,uint256)",
-      "event VoteCast(uint256 indexed,address indexed)",
-      "event ResultRevealed(uint256 indexed,bool,uint32)"
+      "event VoteCommitted(uint256 indexed,address indexed)",
+      "event ResultFinalized(uint256 indexed,bool,uint32,uint32)"
     ];
 
     // ─── Wallet Connection ──────────────────────────────────────────────────────
@@ -637,7 +639,7 @@
         for (let i = 0; i < count; i++) {
           const [title, description, creator, deadline, voterCount, resultRevealed, passed]
             = await contract.getProposal(i);
-          const voted   = await contract.hasVoted(i, account);
+          const voted   = await contract.hasCommitted(i, account);
           const isOpen  = await contract.isVotingOpen(i);
 
           proposals.push({
@@ -711,33 +713,31 @@
         const p = proposals.find(x => x.id === proposalId);
         if (p) { p.voted = true; p.voterCount++; totalVotesCast++; }
         renderProposals(); updateStats();
-        toast(`Vote cast (${voteYes ? "YES ✓" : "NO ✗"}) — encrypted in demo mode`, "success");
+        toast(`Vote committed (demo mode)`, "success");
         return;
       }
 
       try {
-        toast(`<span class="spinner"></span> Encrypting vote with fhEVM…`, "info");
+        toast(`<span class="spinner"></span> Committing encrypted vote…`, "info");
 
         const ethers   = window.ethers;
-        let encVote, proof;
-
-        if (fhevmInstance) {
-          // Real FHE encryption via fhevmjs
-          const input = fhevmInstance.createEncryptedInput(CONTRACT_ADDRESS, account);
-          input.addBool(voteYes);
-          const encrypted = await input.encrypt();
-          encVote = encrypted.handles[0];
-          proof   = encrypted.inputProof;
-        } else {
-          // Fallback placeholder (contract will revert — for demo only)
-          encVote = ethers.zeroPadValue(ethers.toBeHex(voteYes ? 1 : 0), 32);
-          proof   = "0x";
-        }
-
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-        const tx = await contract.castVote(proposalId, encVote, proof);
+
+        // Generate a random secret
+        const secret = ethers.randomBytes(32);
+        const secretHex = ethers.hexlify(secret);
+
+        // Generate commit hash via contract helper
+        const commitHash = await contract.generateCommitHash(voteYes, secretHex);
+
+        // Store secret locally so user can reveal later
+        const key = `vote_${CONTRACT_ADDRESS}_${proposalId}_${account}`;
+        localStorage.setItem(key, JSON.stringify({ voteYes, secret: secretHex }));
+
+        // Submit commit
+        const tx = await contract.commitVote(proposalId, commitHash);
         await tx.wait();
-        toast("Vote cast — encrypted on-chain ✓", "success");
+        toast(`Vote committed ✓ — hidden until deadline`, "success");
         await loadProposals();
 
       } catch (e) {
