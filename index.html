@@ -718,6 +718,7 @@
       try {
         toast(`<span class="spinner"></span> Encrypting vote with fhEVM…`, "info");
 
+        const ethers   = window.ethers;
         let encVote, proof;
 
         if (fhevmInstance) {
@@ -733,7 +734,6 @@
           proof   = "0x";
         }
 
-        const ethers   = window.ethers;
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
         const tx = await contract.castVote(proposalId, encVote, proof);
         await tx.wait();
