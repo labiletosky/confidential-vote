@@ -451,7 +451,7 @@
     </div>
     <div class="header-right">
       <div class="network-badge">⬡ SEPOLIA TESTNET</div>
-      <button class="btn-connect" id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
+      <button class="btn-connect" id="connectBtn">Connect Wallet</button>
     </div>
   </header>
 
@@ -594,11 +594,9 @@
       if (account) {
         btn.textContent = shortAddr(account);
         btn.classList.add("connected");
-        btn.onclick = disconnectWallet;
       } else {
         btn.textContent = "Connect Wallet";
         btn.classList.remove("connected");
-        btn.onclick = connectWallet;
       }
     }
 
@@ -788,6 +786,8 @@
     }
 
     // ─── Request Result ─────────────────────────────────────────────────────────
+
+    async function requestResult(proposalId) {
       if (!account) { toast("Connect wallet first.", "error"); return; }
 
       if (CONTRACT_ADDRESS === "YOUR_DEPLOYED_CONTRACT_ADDRESS") {
@@ -970,6 +970,15 @@
         if (account) loadProposals();
       });
     }
+
+    // Connect button event
+    document.getElementById("connectBtn").addEventListener("click", function() {
+      if (account) {
+        disconnectWallet();
+      } else {
+        connectWallet();
+      }
+    });
   </script>
 
 
