@@ -776,11 +776,11 @@
       try {
         const ethers   = window.ethers;
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-        toast(`<span class="spinner"></span> Requesting Gateway decryption…`, "info");
-        const tx = await contract.requestResult(proposalId);
+        toast(`<span class="spinner"></span> Finalizing result on-chain…`, "info");
+        const tx = await contract.finalizeResult(proposalId);
         await tx.wait();
-        toast("Decryption requested — result will appear shortly ✓", "success");
-        setTimeout(() => loadProposals(), 5000);
+        toast("Result finalized on-chain ✓", "success");
+        await loadProposals();
       } catch (e) {
         toast("Failed: " + (e.reason || e.message), "error");
       }
