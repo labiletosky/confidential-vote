@@ -565,6 +565,12 @@
       }
 
       try {
+        // Force wallet to show account picker
+        await window.ethereum.request({
+          method: "wallet_requestPermissions",
+          params: [{ eth_accounts: {} }]
+        });
+
         const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
         account = accounts[0];
 
