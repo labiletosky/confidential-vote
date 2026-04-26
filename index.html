@@ -762,7 +762,32 @@
 
     // ─── Request Result ─────────────────────────────────────────────────────────
 
-    async function requestResult(proposalId) {
+    // ─── Reveal Vote ─────────────────────────────────────────────────────────────
+
+    async function revealVote(proposalId) {
+      if (!account) { toast("Connect wallet first.", "error"); return; }
+
+      const key = `vote_${CONTRACT_ADDRESS}_${proposalId}_${account}`;
+      const stored = localStorage.getItem(key);
+      if (!stored) { toast("No stored vote found for this proposal.", "error"); return; }
+
+      const { voteYes, secret } = JSON.parse(stored);
+
+      try {
+        const ethers   = window.ethers;
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+        toast(`<span class="spinner"></span> Revealing vote on-chain…`, "info");
+        const tx = await contract.revealVote(proposalId, voteYes, secret);
+        await tx.wait();
+        localStorage.removeItem(key);
+        toast(`Vote revealed (${voteYes ? "YES ✓" : "NO ✗"}) on-chain!`, "success");
+        await loadProposals();
+      } catch (e) {
+        toast("Reveal failed: " + (e.reason || e.message), "error");
+      }
+    }
+
+    // ─── Request Result ─────────────────────────────────────────────────────────
       if (!account) { toast("Connect wallet first.", "error"); return; }
 
       if (CONTRACT_ADDRESS === "YOUR_DEPLOYED_CONTRACT_ADDRESS") {
@@ -824,7 +849,20 @@
           }
         } else {
           statusBadge = `<span class="status-badge status-closed">CLOSED</span>`;
-          actionHtml  = `<button class="btn-reveal" onclick="requestResult(${p.id})">🔓 Reveal Result via Gateway</button>`;
+          // Check if user has a stored secret for this proposal
+          const key = `vote_${CONTRACT_ADDRESS}_${p.id}_${account}`;
+          const storedVote = localStorage.getItem(key);
+          if (storedVote && p.voted) {
+            actionHtml = `
+              <div class="vote-row">
+                <button class="btn-reveal" onclick="revealVote(${p.id})">🔓 Reveal My Vote</button>
+                <button class="btn-reveal" onclick="requestResult(${p.id})" style="margin-left:0.5rem">📊 Finalize Result</button>
+              </div>
+              <div class="voted-tag">Reveal your vote first, then finalize</div>
+            `;
+          } else {
+            actionHtml = `<button class="btn-reveal" onclick="requestResult(${p.id})">📊 Finalize Result</button>`;
+          }
         }
 
         return `
