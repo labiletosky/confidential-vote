@@ -7,385 +7,646 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗳</text></svg>">
   <!-- ethers.js v6 — must load first -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:        #080b10;
-      --surface:   #0e1318;
-      --border:    #1c2430;
-      --accent:    #00e5ff;
-      --accent2:   #7b61ff;
-      --danger:    #ff4d6d;
-      --success:   #00ffb2;
-      --text:      #d6e4f0;
-      --muted:     #4a6275;
-      --mono:      'Space Mono', monospace;
-      --sans:      'Syne', sans-serif;
+      --ink:       #0a0a0f;
+      --paper:     #f5f2eb;
+      --cream:     #ede9df;
+      --gold:      #c9a84c;
+      --gold-dim:  #8a6f2e;
+      --red:       #c0392b;
+      --green:     #1a6b3c;
+      --blue:      #1a3a6b;
+      --muted:     #6b6560;
+      --border:    #d4cfc4;
+      --serif:     'DM Serif Display', Georgia, serif;
+      --mono:      'DM Mono', monospace;
+      --sans:      'DM Sans', system-ui, sans-serif;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: var(--bg);
-      color: var(--text);
+      background: var(--paper);
+      color: var(--ink);
       font-family: var(--sans);
       min-height: 100vh;
-      overflow-x: hidden;
     }
 
-    /* ── Grid noise texture overlay ── */
+    /* ── Grain texture ── */
     body::before {
       content: '';
       position: fixed; inset: 0;
-      background-image:
-        radial-gradient(ellipse 80% 50% at 20% 20%, rgba(0,229,255,0.04) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 60% at 80% 80%, rgba(123,97,255,0.05) 0%, transparent 60%);
-      pointer-events: none; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.4;
     }
 
-    /* ── Scan line effect ── */
-    body::after {
-      content: '';
-      position: fixed; inset: 0;
-      background: repeating-linear-gradient(
-        to bottom,
-        transparent 0px,
-        transparent 2px,
-        rgba(0,0,0,0.08) 2px,
-        rgba(0,0,0,0.08) 4px
-      );
-      pointer-events: none; z-index: 1;
-    }
-
-    /* ── Header ── */
-    header {
+    /* ── Top bar ── */
+    .topbar {
       position: relative; z-index: 10;
-      border-bottom: 2px solid rgba(0,229,255,0.3);
-      padding: 1.2rem 2rem;
-      display: flex; align-items: center; justify-content: space-between;
-      background: linear-gradient(90deg, rgba(0,229,255,0.06), rgba(123,97,255,0.06));
-      backdrop-filter: blur(10px);
+      border-bottom: 2px solid var(--ink);
+      padding: 0 3rem;
+      display: flex;
+      align-items: stretch;
+      height: 64px;
     }
 
-    .logo {
-      display: flex; align-items: center; gap: 0.75rem;
-    }
-
-    .logo-icon {
-      width: 36px; height: 36px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem;
-    }
-
-    .logo h1 {
-      font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em;
-      color: #fff;
-      background: linear-gradient(90deg, #fff, var(--accent));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .logo span {
-      font-family: var(--mono);
-      font-size: 0.65rem;
-      color: var(--accent);
-      display: block;
-      letter-spacing: 0.1em;
-    }
-
-    .header-right {
+    .topbar-brand {
       display: flex; align-items: center; gap: 1rem;
+      border-right: 1px solid var(--border);
+      padding-right: 2rem;
+      margin-right: 2rem;
     }
 
-    .network-badge {
-      font-family: var(--mono);
-      font-size: 0.65rem;
-      color: var(--success);
-      background: rgba(0,255,178,0.08);
-      border: 1px solid rgba(0,255,178,0.2);
-      padding: 0.3rem 0.75rem;
-      border-radius: 100px;
-      letter-spacing: 0.05em;
+    .brand-seal {
+      width: 36px; height: 36px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      background: var(--ink);
+      color: var(--paper);
     }
 
-    /* ── Connect button ── */
-    .btn-connect {
-      font-family: var(--mono);
-      font-size: 0.75rem;
-      background: transparent;
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      padding: 0.5rem 1.2rem;
-      border-radius: 6px;
-      cursor: pointer;
-      letter-spacing: 0.05em;
-      transition: all 0.2s;
-    }
-    .btn-connect:hover { background: rgba(0,229,255,0.1); }
-    .btn-connect.connected {
-      border-color: var(--success);
-      color: var(--success);
-      background: rgba(0,255,178,0.06);
+    .brand-name {
+      font-family: var(--serif);
+      font-size: 1.25rem;
+      letter-spacing: -0.01em;
+      line-height: 1;
     }
 
-    /* ── Layout ── */
-    main {
-      position: relative; z-index: 10;
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 2.5rem 2rem;
-      display: grid;
-      grid-template-columns: 1fr 380px;
-      gap: 2rem;
-      align-items: start;
-    }
-
-    @media (max-width: 760px) {
-      main { grid-template-columns: 1fr; padding: 1.5rem 1rem; }
-    }
-
-    /* ── Section labels ── */
-    .section-label {
+    .brand-tagline {
       font-family: var(--mono);
       font-size: 0.6rem;
-      letter-spacing: 0.15em;
       color: var(--muted);
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      margin-bottom: 1rem;
+      display: block;
+      margin-top: 2px;
     }
 
-    /* ── Cards ── */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-      transition: border-color 0.2s;
+    .topbar-meta {
+      display: flex; align-items: center; gap: 2rem;
+      flex: 1;
     }
-    .card:hover { border-color: rgba(0,229,255,0.2); }
 
-    /* ── Proposal list ── */
-    .proposal-header {
-      display: flex; justify-content: space-between; align-items: flex-start;
+    .meta-item {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .meta-item strong {
+      display: block;
+      color: var(--ink);
+      font-size: 0.7rem;
+      margin-bottom: 1px;
+    }
+
+    .topbar-right {
+      display: flex; align-items: center; gap: 1rem;
+      margin-left: auto;
+    }
+
+    .network-pill {
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.8rem;
+      border: 1px solid var(--green);
+      color: var(--green);
+      border-radius: 2px;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+
+    .network-pill::before {
+      content: '';
+      width: 5px; height: 5px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .btn-connect {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: var(--ink);
+      color: var(--paper);
+      border: none;
+      padding: 0.5rem 1.2rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-connect:hover { opacity: 0.8; }
+    .btn-connect.connected {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--ink);
+    }
+
+    /* ── Hero strip ── */
+    .hero {
+      position: relative; z-index: 5;
+      border-bottom: 1px solid var(--border);
+      padding: 3rem 3rem 2.5rem;
+      background: linear-gradient(135deg, var(--ink) 0%, #1a1a2e 100%);
+      color: var(--paper);
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: 'CONFIDENTIAL';
+      position: absolute;
+      right: -2rem; top: 50%;
+      transform: translateY(-50%) rotate(90deg);
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.5em;
+      color: rgba(255,255,255,0.08);
+      pointer-events: none;
+    }
+
+    .hero-label {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
       margin-bottom: 0.75rem;
     }
 
-    .proposal-title {
-      font-size: 1rem; font-weight: 700;
-      color: #fff; line-height: 1.3;
+    .hero-title {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      line-height: 1.1;
+      margin-bottom: 1rem;
+      max-width: 700px;
     }
 
-    .status-badge {
+    .hero-title em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .hero-desc {
+      font-size: 0.9rem;
+      color: rgba(245,242,235,0.7);
+      max-width: 560px;
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    .hero-stats {
+      display: flex; gap: 3rem;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .hero-stat-val {
+      font-family: var(--serif);
+      font-size: 2.5rem;
+      color: var(--paper);
+      display: block;
+      line-height: 1;
+    }
+
+    .hero-stat-label {
       font-family: var(--mono);
-      font-size: 0.6rem;
-      letter-spacing: 0.08em;
+      font-size: 0.58rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(245,242,235,0.5);
+      margin-top: 0.3rem;
+      display: block;
+    }
+
+    /* ── Main layout ── */
+    .layout {
+      position: relative; z-index: 5;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      min-height: calc(100vh - 180px);
+    }
+
+    @media (max-width: 820px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { border-left: none; border-top: 1px solid var(--border); }
+      .topbar { padding: 0 1rem; }
+      .hero { padding: 2rem 1rem; }
+    }
+
+    /* ── Proposals panel ── */
+    .proposals-panel {
+      border-right: 1px solid var(--border);
+      padding: 2rem 3rem;
+    }
+
+    .panel-header {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+      font-family: var(--serif);
+      font-size: 1.4rem;
+    }
+
+    .panel-count {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+
+    /* ── Proposal card ── */
+    .proposal-card {
+      border: 1px solid var(--border);
+      margin-bottom: 1rem;
+      background: #fff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .proposal-card:hover {
+      border-color: var(--ink);
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+
+    .card-accent {
+      height: 3px;
+      background: var(--ink);
+    }
+    .card-accent.open   { background: var(--gold); }
+    .card-accent.closed { background: var(--muted); }
+    .card-accent.passed { background: var(--green); }
+    .card-accent.failed { background: var(--red); }
+
+    .card-body { padding: 1.25rem 1.5rem; }
+
+    .card-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 0.6rem;
+    }
+
+    .card-title {
+      font-family: var(--serif);
+      font-size: 1.05rem;
+      line-height: 1.3;
+      flex: 1;
+      padding-right: 1rem;
+    }
+
+    .status-tag {
+      font-family: var(--mono);
+      font-size: 0.55rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
       padding: 0.25rem 0.6rem;
-      border-radius: 100px;
+      border: 1px solid currentColor;
       white-space: nowrap;
       flex-shrink: 0;
-      margin-left: 0.75rem;
     }
-    .status-open   { background: rgba(0,229,255,0.1); color: var(--accent); border: 1px solid rgba(0,229,255,0.25); }
-    .status-closed { background: rgba(74,98,117,0.2); color: var(--muted);  border: 1px solid var(--border); }
-    .status-passed { background: rgba(0,255,178,0.1); color: var(--success);border: 1px solid rgba(0,255,178,0.25); }
-    .status-failed { background: rgba(255,77,109,0.1); color: var(--danger); border: 1px solid rgba(255,77,109,0.25); }
+    .status-tag.open   { color: var(--gold-dim); border-color: var(--gold); }
+    .status-tag.closed { color: var(--muted); }
+    .status-tag.passed { color: var(--green); }
+    .status-tag.failed { color: var(--red); }
 
-    .proposal-desc {
-      font-size: 0.82rem;
+    .card-desc {
+      font-size: 0.8rem;
       color: var(--muted);
       line-height: 1.6;
       margin-bottom: 1rem;
     }
 
-    .proposal-meta {
+    .card-meta {
       display: flex; gap: 1.5rem; flex-wrap: wrap;
       font-family: var(--mono);
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       color: var(--muted);
-      margin-bottom: 1.2rem;
-    }
-    .proposal-meta span { display: flex; align-items: center; gap: 0.35rem; }
-
-    /* ── Vote buttons ── */
-    .vote-row {
-      display: flex; gap: 0.75rem;
-    }
-
-    .btn-yes, .btn-no, .btn-reveal, .btn-primary {
-      font-family: var(--mono);
-      font-size: 0.72rem;
       letter-spacing: 0.05em;
-      padding: 0.55rem 1.2rem;
-      border-radius: 7px;
-      border: none;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--cream);
+    }
+
+    .card-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+    .btn-yes, .btn-no, .btn-reveal, .btn-finalize {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid;
       cursor: pointer;
-      transition: all 0.2s;
-      font-weight: 700;
+      transition: all 0.15s;
+      background: transparent;
     }
 
     .btn-yes {
-      background: rgba(0,255,178,0.12);
-      color: var(--success);
-      border: 1px solid rgba(0,255,178,0.3);
+      border-color: var(--green);
+      color: var(--green);
     }
-    .btn-yes:hover { background: rgba(0,255,178,0.2); }
+    .btn-yes:hover { background: var(--green); color: #fff; }
 
     .btn-no {
-      background: rgba(255,77,109,0.1);
-      color: var(--danger);
-      border: 1px solid rgba(255,77,109,0.25);
+      border-color: var(--red);
+      color: var(--red);
     }
-    .btn-no:hover { background: rgba(255,77,109,0.18); }
+    .btn-no:hover { background: var(--red); color: #fff; }
 
     .btn-reveal {
-      background: rgba(123,97,255,0.12);
-      color: var(--accent2);
-      border: 1px solid rgba(123,97,255,0.3);
+      border-color: var(--gold-dim);
+      color: var(--gold-dim);
     }
-    .btn-reveal:hover { background: rgba(123,97,255,0.22); }
+    .btn-reveal:hover { background: var(--gold); color: #fff; border-color: var(--gold); }
 
-    .btn-primary {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #000;
-      font-weight: 800;
-      width: 100%;
-      padding: 0.75rem;
-      font-size: 0.78rem;
-      border-radius: 8px;
+    .btn-finalize {
+      border-color: var(--blue);
+      color: var(--blue);
     }
-    .btn-primary:hover { opacity: 0.88; }
+    .btn-finalize:hover { background: var(--blue); color: #fff; }
 
-    .voted-tag {
+    .voted-note {
       font-family: var(--mono);
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       color: var(--muted);
-      padding: 0.5rem 0;
       letter-spacing: 0.05em;
+      display: flex; align-items: center; gap: 0.4rem;
     }
 
-    /* ── Encryption indicator ── */
-    .enc-indicator {
-      display: flex; align-items: center; gap: 0.5rem;
-      font-family: var(--mono);
-      font-size: 0.62rem;
-      color: var(--muted);
+    .result-display {
       margin-top: 0.75rem;
     }
-    .enc-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--accent2);
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.4; transform: scale(0.7); }
+
+    .result-bar-wrap {
+      height: 4px;
+      background: var(--cream);
+      margin: 0.5rem 0;
+      overflow: hidden;
     }
 
-    /* ── Right panel — Create Proposal ── */
-    .panel {
-      position: sticky; top: 2rem;
+    .result-bar-fill {
+      height: 100%;
+      transition: width 1.2s ease;
     }
+    .result-bar-fill.passed { background: var(--green); }
+    .result-bar-fill.failed { background: var(--red); }
 
-    .panel .card { margin-bottom: 0; }
-
-    .panel h2 {
-      font-size: 0.95rem; font-weight: 800;
-      color: #fff;
-      margin-bottom: 1.2rem;
-    }
-
-    /* ── Form ── */
-    .field { margin-bottom: 1rem; }
-
-    label {
-      display: block;
+    .result-text {
       font-family: var(--mono);
       font-size: 0.62rem;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.05em;
+    }
+    .result-text.passed { color: var(--green); }
+    .result-text.failed { color: var(--red); }
+
+    .privacy-note {
+      font-family: var(--mono);
+      font-size: 0.58rem;
       color: var(--muted);
+      letter-spacing: 0.05em;
+      margin-top: 0.75rem;
+      display: flex; align-items: center; gap: 0.4rem;
+      opacity: 0.7;
+    }
+
+    .lock-icon {
+      width: 8px; height: 8px;
+      border: 1px solid currentColor;
+      border-radius: 1px;
+      display: inline-block;
+      position: relative;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+    }
+
+    .empty-state .seal {
+      font-family: var(--serif);
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.2;
+    }
+
+    .empty-state p {
+      font-size: 0.85rem;
+      line-height: 1.7;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      padding: 2rem;
+      background: var(--cream);
+    }
+
+    .sidebar-section {
+      margin-bottom: 2rem;
+    }
+
+    .sidebar-label {
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+
+    .sidebar-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .form-field { margin-bottom: 1rem; }
+
+    .form-label {
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: block;
       margin-bottom: 0.4rem;
     }
 
     input, textarea, select {
       width: 100%;
-      background: var(--bg);
+      background: #fff;
       border: 1px solid var(--border);
-      border-radius: 7px;
-      color: var(--text);
+      color: var(--ink);
       font-family: var(--sans);
       font-size: 0.82rem;
-      padding: 0.65rem 0.9rem;
+      padding: 0.65rem 0.85rem;
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color 0.15s;
+      border-radius: 0;
+      appearance: none;
     }
-    input:focus, textarea:focus, select:focus {
-      border-color: var(--accent);
-    }
-    textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 
-    /* ── FHE info box ── */
-    .fhe-info {
-      background: linear-gradient(135deg, rgba(0,229,255,0.05), rgba(123,97,255,0.05));
-      border: 1px solid rgba(0,229,255,0.15);
-      border-radius: 10px;
-      padding: 1rem;
-      margin-top: 1.2rem;
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--ink);
     }
-    .fhe-info h3 {
-      font-family: var(--mono);
-      font-size: 0.65rem;
-      color: var(--accent);
-      letter-spacing: 0.1em;
-      margin-bottom: 0.5rem;
-    }
-    .fhe-info p {
-      font-size: 0.75rem;
-      color: var(--muted);
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
       line-height: 1.6;
     }
 
-    /* ── Toast notifications ── */
-    #toast-container {
-      position: fixed; bottom: 1.5rem; right: 1.5rem;
-      z-index: 1000;
-      display: flex; flex-direction: column; gap: 0.5rem;
+    .btn-submit {
+      width: 100%;
+      background: var(--ink);
+      color: var(--paper);
+      border: none;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.85rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-top: 0.5rem;
     }
+    .btn-submit:hover { opacity: 0.85; }
+
+    /* ── Info box ── */
+    .info-box {
+      border: 1px solid var(--border);
+      padding: 1.25rem;
+      background: #fff;
+    }
+
+    .info-box-title {
+      font-family: var(--serif);
+      font-size: 0.95rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .info-steps {
+      list-style: none;
+      counter-reset: steps;
+    }
+
+    .info-steps li {
+      counter-increment: steps;
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.6;
+      padding: 0.4rem 0;
+      padding-left: 1.5rem;
+      border-bottom: 1px solid var(--cream);
+      position: relative;
+    }
+
+    .info-steps li:last-child { border-bottom: none; }
+
+    .info-steps li::before {
+      content: counter(steps);
+      position: absolute;
+      left: 0;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--gold-dim);
+      font-weight: 500;
+    }
+
+    /* ── Contract info ── */
+    .contract-info {
+      border: 1px solid var(--border);
+      padding: 1rem;
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .contract-label {
+      font-family: var(--mono);
+      font-size: 0.55rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.4rem;
+    }
+
+    .contract-addr {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      word-break: break-all;
+      line-height: 1.6;
+      color: rgba(245,242,235,0.8);
+    }
+
+    .contract-link {
+      display: inline-block;
+      margin-top: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-decoration: none;
+      text-transform: uppercase;
+    }
+    .contract-link:hover { text-decoration: underline; }
+
+    /* ── Toast ── */
+    #toast-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
     .toast {
       font-family: var(--mono);
-      font-size: 0.72rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.03em;
       padding: 0.75rem 1.2rem;
-      border-radius: 8px;
-      max-width: 320px;
+      max-width: 340px;
+      border-left: 3px solid;
       animation: slideIn 0.3s ease;
+      background: #fff;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
     }
-    .toast-success { background: rgba(0,255,178,0.12); border: 1px solid rgba(0,255,178,0.3); color: var(--success); }
-    .toast-error   { background: rgba(255,77,109,0.12); border: 1px solid rgba(255,77,109,0.3); color: var(--danger); }
-    .toast-info    { background: rgba(0,229,255,0.1);  border: 1px solid rgba(0,229,255,0.25); color: var(--accent); }
+
+    .toast-success { border-color: var(--green); color: var(--green); }
+    .toast-error   { border-color: var(--red);   color: var(--red);   }
+    .toast-info    { border-color: var(--gold);   color: var(--gold-dim); }
 
     @keyframes slideIn {
       from { transform: translateX(110%); opacity: 0; }
       to   { transform: translateX(0);   opacity: 1; }
     }
 
-    /* ── Empty state ── */
-    .empty-state {
-      text-align: center;
-      padding: 3rem 2rem;
-      color: var(--muted);
-    }
-    .empty-state .icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.4; }
-    .empty-state p { font-size: 0.82rem; line-height: 1.6; }
-
-    /* ── Loading spinner ── */
     .spinner {
       display: inline-block;
-      width: 14px; height: 14px;
-      border: 2px solid rgba(0,229,255,0.2);
-      border-top-color: var(--accent);
+      width: 10px; height: 10px;
+      border: 1.5px solid currentColor;
+      border-top-color: transparent;
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
       vertical-align: middle;
@@ -393,107 +654,122 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Result reveal bar ── */
-    .result-bar {
-      margin-top: 0.75rem;
-      background: rgba(255,255,255,0.04);
-      border-radius: 100px;
-      height: 6px;
-      overflow: hidden;
+    /* ── Footer ── */
+    .footer {
+      position: relative; z-index: 5;
+      border-top: 2px solid var(--ink);
+      padding: 1rem 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--ink);
+      color: var(--paper);
     }
-    .result-fill {
-      height: 100%;
-      border-radius: 100px;
-      transition: width 1s ease;
-    }
-    .result-fill.yes { background: var(--success); }
-    .result-fill.no  { background: var(--danger); }
 
-    .result-label {
+    .footer-left {
       font-family: var(--mono);
-      font-size: 0.68rem;
-      margin-top: 0.5rem;
-      color: var(--text);
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      color: rgba(245,242,235,0.5);
     }
 
-    /* ── Divider ── */
-    hr { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
-
-    /* ── Stats bar ── */
-    .stats-bar {
-      display: flex; gap: 1.5rem;
+    .footer-right {
       font-family: var(--mono);
-      font-size: 0.65rem;
-      color: var(--muted);
-      margin-bottom: 1.5rem;
-      padding-bottom: 1.2rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .stats-bar .stat-val {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--accent);
-      font-family: var(--sans);
-      display: block;
+      font-size: 0.6rem;
+      color: var(--gold);
+      letter-spacing: 0.05em;
     }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
-  <header>
-    <div class="logo">
-      <div class="logo-icon">🗳</div>
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-seal">🗳</div>
       <div>
-        <h1>ConfidentialVote</h1>
-        <span>POWERED BY ZAMA fhEVM</span>
+        <div class="brand-name">ConfidentialVote</div>
+        <span class="brand-tagline">Private DAO Governance</span>
       </div>
     </div>
-    <div class="header-right">
-      <div class="network-badge">⬡ SEPOLIA TESTNET</div>
+    <div class="topbar-meta">
+      <div class="meta-item">
+        <strong id="statTotal">0</strong>
+        Proposals
+      </div>
+      <div class="meta-item">
+        <strong id="statOpen">0</strong>
+        Active
+      </div>
+      <div class="meta-item">
+        <strong id="statVoters">0</strong>
+        Votes Cast
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="network-pill">Sepolia Testnet</div>
       <button class="btn-connect" id="connectBtn">Connect Wallet</button>
     </div>
   </header>
 
-  <!-- Main layout -->
-  <main>
-
-    <!-- Left: Proposals -->
-    <div>
-      <div class="section-label">// Active &amp; Past Proposals</div>
-
-      <div class="stats-bar" id="statsBar">
-        <div><span class="stat-val" id="statTotal">0</span>TOTAL PROPOSALS</div>
-        <div><span class="stat-val" id="statOpen">0</span>OPEN VOTES</div>
-        <div><span class="stat-val" id="statVoters">0</span>VOTES CAST</div>
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-label">// Zama fhEVM Builder Track Submission</div>
+    <h1 class="hero-title">
+      DAO Governance where <em>no one sees</em><br/>your vote until it's too late to buy it.
+    </h1>
+    <p class="hero-desc">
+      Votes are sealed cryptographically on-chain. No live tallies. No bandwagon effect.
+      No bribery. Results revealed only after the deadline — trustlessly.
+    </p>
+    <div class="hero-stats">
+      <div>
+        <span class="hero-stat-val" id="heroTotal">0</span>
+        <span class="hero-stat-label">Total Proposals</span>
       </div>
+      <div>
+        <span class="hero-stat-val" id="heroOpen">0</span>
+        <span class="hero-stat-label">Open Votes</span>
+      </div>
+      <div>
+        <span class="hero-stat-val" id="heroVotes">0</span>
+        <span class="hero-stat-label">Votes Committed</span>
+      </div>
+    </div>
+  </div>
 
+  <!-- Layout -->
+  <div class="layout">
+
+    <!-- Proposals -->
+    <div class="proposals-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Active &amp; Past Proposals</h2>
+        <span class="panel-count" id="proposalCount">— proposals</span>
+      </div>
       <div id="proposalList">
         <div class="empty-state">
-          <div class="icon">🔒</div>
-          <p>No proposals yet.<br/>Connect your wallet and create the first one.</p>
+          <div class="seal">⚖</div>
+          <p>No proposals on record.<br/>Connect your wallet to create the first governance proposal.</p>
         </div>
       </div>
     </div>
 
-    <!-- Right: Create Proposal -->
-    <div class="panel">
-      <div class="section-label">// New Proposal</div>
-      <div class="card">
-        <h2>Create Proposal</h2>
+    <!-- Sidebar -->
+    <aside class="sidebar">
 
-        <div class="field">
-          <label>PROPOSAL TITLE</label>
-          <input type="text" id="propTitle" placeholder="e.g. Allocate 5 ETH to dev fund" maxlength="80" />
+      <div class="sidebar-section">
+        <div class="sidebar-label">New Proposal</div>
+        <div class="form-field">
+          <label class="form-label">Title</label>
+          <input type="text" id="propTitle" placeholder="Proposal title..." maxlength="80" />
         </div>
-
-        <div class="field">
-          <label>DESCRIPTION</label>
-          <textarea id="propDesc" placeholder="Describe what this proposal is about and why it matters..."></textarea>
+        <div class="form-field">
+          <label class="form-label">Description</label>
+          <textarea id="propDesc" placeholder="Describe the proposal and why it matters..."></textarea>
         </div>
-
-        <div class="field">
-          <label>VOTING DURATION</label>
+        <div class="form-field">
+          <label class="form-label">Voting Duration</label>
           <select id="propDuration">
             <option value="300">5 minutes (demo)</option>
             <option value="3600">1 hour</option>
@@ -502,45 +778,52 @@
             <option value="604800">7 days</option>
           </select>
         </div>
-
-        <button class="btn-primary" onclick="createProposal()">
-          🔐 Create Encrypted Proposal
+        <button class="btn-submit" onclick="createProposal()">
+          Submit Proposal →
         </button>
+      </div>
 
-        <div class="fhe-info">
-          <h3>⚡ HOW IT WORKS</h3>
-          <p>
-            Your vote is encrypted client-side using Zama's fhEVM before it ever hits the chain.
-            No one — not validators, not the contract creator — can see the tally until the deadline.
-            Results are revealed via the Zama Gateway using threshold MPC decryption.
-          </p>
+      <div class="sidebar-section">
+        <div class="sidebar-label">How It Works</div>
+        <div class="info-box">
+          <div class="info-box-title">The Sealed Envelope Protocol</div>
+          <ol class="info-steps">
+            <li>You vote by sealing your choice as a cryptographic hash on-chain — nobody can see it</li>
+            <li>The voting window closes at the deadline</li>
+            <li>You reveal your vote — the contract verifies it matches your original commitment</li>
+            <li>Anyone finalizes the result — trustlessly, on-chain</li>
+          </ol>
         </div>
       </div>
-    </div>
-  </main>
 
-  <!-- Toast container -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Contract</div>
+        <div class="contract-info">
+          <div class="contract-label">Deployed on Sepolia</div>
+          <div class="contract-addr">0xf572a764e95479948C7D93bd93fA22d3f7A338f0</div>
+          <a class="contract-link" href="https://sepolia.etherscan.io/address/0xf572a764e95479948C7D93bd93fA22d3f7A338f0#code" target="_blank">
+            View Verified Source →
+          </a>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-left">ConfidentialVote · Built by @labiletosky · Zama Builder Track 2026</div>
+    <div class="footer-right">Commit-Reveal · Sepolia Testnet · Verified ✓</div>
+  </footer>
+
+  <!-- Toast -->
   <div id="toast-container"></div>
 
-  <!-- fhevmjs SDK (loads from CDN) -->
-  <script src="https://cdn.jsdelivr.net/npm/fhevmjs@0.6.0/bundle/fhevm.min.js" onerror="onSdkError()"></script>
-
   <script>
-    // ─── State ─────────────────────────────────────────────────────────────────
-
+    // ─── Config ──────────────────────────────────────────────────────────────────
     const CONTRACT_ADDRESS = "0xf572a764e95479948C7D93bd93fA22d3f7A338f0";
-    const SEPOLIA_CHAIN_ID = "0xaa36a7"; // 11155111
+    const SEPOLIA_CHAIN_ID = "0xaa36a7";
 
-    let provider    = null;
-    let signer      = null;
-    let account     = null;
-    let fhevmInstance = null;
-
-    // Local mock proposal store (bridges UI before/after chain reads)
-    let proposals = [];
-    let totalVotesCast = 0;
-
-    // Minimal ABI for our contract
     const ABI = [
       "function proposalCount() view returns (uint256)",
       "function createProposal(string,string,uint256) returns (uint256)",
@@ -556,43 +839,31 @@
       "event ResultFinalized(uint256 indexed,bool,uint32,uint32)"
     ];
 
-    // ─── Wallet Connection ──────────────────────────────────────────────────────
+    let provider = null, signer = null, account = null;
+    let proposals = [], totalVotesCast = 0;
+
+    // ─── Wallet ──────────────────────────────────────────────────────────────────
 
     async function connectWallet() {
-      if (!window.ethereum) {
-        toast("MetaMask not detected. Please install it.", "error");
-        return;
-      }
-
+      if (!window.ethereum) { toast("MetaMask not detected.", "error"); return; }
       try {
-        // Force wallet to show account picker
-        await window.ethereum.request({
-          method: "wallet_requestPermissions",
-          params: [{ eth_accounts: {} }]
-        });
-
+        await window.ethereum.request({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] });
         const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
         account = accounts[0];
-
-        // Switch to Sepolia
         try {
-          await window.ethereum.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: SEPOLIA_CHAIN_ID }]
-          });
-        } catch (e) {
-          toast("Please switch to Sepolia testnet manually.", "error");
-          return;
-        }
-
+          await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: SEPOLIA_CHAIN_ID }] });
+        } catch(e) { toast("Switch to Sepolia testnet.", "error"); return; }
         updateConnectButton();
         toast(`Connected: ${shortAddr(account)}`, "success");
-        await initFhevm();
         await loadProposals();
+      } catch(e) { toast("Connection rejected.", "error"); }
+    }
 
-      } catch (e) {
-        toast("Connection rejected.", "error");
-      }
+    function disconnectWallet() {
+      account = null; provider = null; signer = null; proposals = [];
+      updateConnectButton();
+      renderDemoProposals();
+      toast("Wallet disconnected", "info");
     }
 
     function updateConnectButton() {
@@ -606,313 +877,196 @@
       }
     }
 
-    function disconnectWallet() {
-      account   = null;
-      provider  = null;
-      signer    = null;
-      proposals = [];
-      updateConnectButton();
-      renderDemoProposals();
-      toast("Wallet disconnected", "info");
-    }
-
-    // ─── fhEVM Init ─────────────────────────────────────────────────────────────
-
-    async function initFhevm() {
-      try {
-        if (window.fhevm) {
-          fhevmInstance = await window.fhevm.createInstance({ chainId: 11155111 });
-          toast("fhEVM encryption ready ✓", "info");
-        }
-      } catch (e) {
-        console.warn("fhEVM SDK not loaded — running in demo mode", e);
-      }
-    }
-
-    function onSdkError() {
-      console.warn("fhevmjs CDN failed — demo mode active");
-    }
-
-    // ─── Load Proposals from Chain ──────────────────────────────────────────────
+    // ─── Load Proposals ───────────────────────────────────────────────────────────
 
     async function loadProposals() {
       if (!window.ethereum || !account) return;
-
       try {
-        // Use ethers via CDN (loaded below)
         const ethers = window.ethers;
         provider = new ethers.BrowserProvider(window.ethereum);
         signer   = await provider.getSigner();
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
-
-        // Guard: skip if placeholder not replaced
-        if (CONTRACT_ADDRESS === "YOUR_DEPLOYED_CONTRACT_ADDRESS") {
-          renderDemoProposals();
-          return;
-        }
-
         const count = Number(await contract.proposalCount());
-        proposals = [];
-        totalVotesCast = 0;
-
+        proposals = []; totalVotesCast = 0;
         for (let i = 0; i < count; i++) {
-          const [title, description, creator, deadline, voterCount, resultRevealed, passed]
-            = await contract.getProposal(i);
-          const voted   = await contract.hasCommitted(i, account);
-          const isOpen  = await contract.isVotingOpen(i);
-
-          proposals.push({
-            id: i, title, description, creator,
-            deadline: Number(deadline),
-            voterCount: Number(voterCount),
-            resultRevealed, passed, voted, isOpen
-          });
+          const [title, description, creator, deadline, voterCount, resultRevealed, passed] = await contract.getProposal(i);
+          const voted  = await contract.hasCommitted(i, account);
+          const isOpen = await contract.isVotingOpen(i);
+          proposals.push({ id: i, title, description, creator, deadline: Number(deadline), voterCount: Number(voterCount), resultRevealed, passed, voted, isOpen });
           totalVotesCast += Number(voterCount);
         }
-
-        renderProposals();
-        updateStats();
-
-      } catch (e) {
-        console.error(e);
-        renderDemoProposals();
-      }
+        renderProposals(); updateStats();
+      } catch(e) { console.error(e); renderDemoProposals(); }
     }
 
-    // ─── Create Proposal ────────────────────────────────────────────────────────
+    // ─── Create Proposal ──────────────────────────────────────────────────────────
 
     async function createProposal() {
       if (!account) { toast("Connect wallet first.", "error"); return; }
-
       const title    = document.getElementById("propTitle").value.trim();
       const desc     = document.getElementById("propDesc").value.trim();
       const duration = parseInt(document.getElementById("propDuration").value);
-
       if (!title) { toast("Title is required.", "error"); return; }
       if (!desc)  { toast("Description is required.", "error"); return; }
-
-      if (CONTRACT_ADDRESS === "YOUR_DEPLOYED_CONTRACT_ADDRESS") {
-        // Demo mode: add locally
-        const now = Math.floor(Date.now() / 1000);
-        proposals.unshift({
-          id: proposals.length, title, description: desc,
-          creator: account,
-          deadline: now + duration,
-          voterCount: 0,
-          resultRevealed: false, passed: false,
-          voted: false, isOpen: true
-        });
-        renderProposals();
-        updateStats();
-        toast("Proposal created (demo mode — deploy contract to go live)", "info");
-        document.getElementById("propTitle").value = "";
-        document.getElementById("propDesc").value  = "";
-        return;
-      }
-
       try {
         const ethers   = window.ethers;
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer   = await provider.getSigner();
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-        toast(`<span class="spinner"></span> Submitting to Sepolia…`, "info");
+        toast(`<span class="spinner"></span> Submitting proposal…`, "info");
         const tx = await contract.createProposal(title, desc, duration);
         await tx.wait();
         toast("Proposal created on-chain ✓", "success");
+        document.getElementById("propTitle").value = "";
+        document.getElementById("propDesc").value  = "";
         await loadProposals();
-      } catch (e) {
-        toast("Transaction failed: " + (e.reason || e.message), "error");
-      }
+      } catch(e) { toast("Failed: " + (e.reason || e.message), "error"); }
     }
 
-    // ─── Cast Vote ──────────────────────────────────────────────────────────────
+    // ─── Commit Vote ──────────────────────────────────────────────────────────────
 
     async function castVote(proposalId, voteYes) {
       if (!account) { toast("Connect wallet first.", "error"); return; }
-
-      if (CONTRACT_ADDRESS === "YOUR_DEPLOYED_CONTRACT_ADDRESS") {
-        const p = proposals.find(x => x.id === proposalId);
-        if (p) { p.voted = true; p.voterCount++; totalVotesCast++; }
-        renderProposals(); updateStats();
-        toast(`Vote committed (demo mode)`, "success");
-        return;
-      }
-
       try {
-        toast(`<span class="spinner"></span> Committing encrypted vote…`, "info");
-
+        toast(`<span class="spinner"></span> Sealing your vote on-chain…`, "info");
         const ethers   = window.ethers;
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer   = await provider.getSigner();
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-
-        // Generate a random secret
-        const secret = ethers.randomBytes(32);
-        const secretHex = ethers.hexlify(secret);
-
-        // Generate commit hash via contract helper
-        const commitHash = await contract.generateCommitHash(voteYes, secretHex);
-
-        // Store secret locally so user can reveal later
+        const secret = ethers.hexlify(ethers.randomBytes(32));
+        const commitHash = await contract.generateCommitHash(voteYes, secret);
         const key = `vote_${CONTRACT_ADDRESS}_${proposalId}_${account}`;
-        localStorage.setItem(key, JSON.stringify({ voteYes, secret: secretHex }));
-
-        // Submit commit
+        localStorage.setItem(key, JSON.stringify({ voteYes, secret }));
         const tx = await contract.commitVote(proposalId, commitHash);
         await tx.wait();
-        toast(`Vote committed ✓ — hidden until deadline`, "success");
+        toast(`Vote sealed — hidden until deadline ✓`, "success");
         await loadProposals();
-
-      } catch (e) {
-        toast("Vote failed: " + (e.reason || e.message), "error");
-      }
+      } catch(e) { toast("Vote failed: " + (e.reason || e.message), "error"); }
     }
 
-    // ─── Request Result ─────────────────────────────────────────────────────────
-
-    // ─── Reveal Vote ─────────────────────────────────────────────────────────────
+    // ─── Reveal Vote ──────────────────────────────────────────────────────────────
 
     async function revealVote(proposalId) {
       if (!account) { toast("Connect wallet first.", "error"); return; }
-
       const key = `vote_${CONTRACT_ADDRESS}_${proposalId}_${account}`;
       const stored = localStorage.getItem(key);
-      if (!stored) { toast("No stored vote found for this proposal.", "error"); return; }
-
+      if (!stored) { toast("No stored vote found.", "error"); return; }
       const { voteYes, secret } = JSON.parse(stored);
-
       try {
+        toast(`<span class="spinner"></span> Revealing vote…`, "info");
         const ethers   = window.ethers;
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer   = await provider.getSigner();
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-        toast(`<span class="spinner"></span> Revealing vote on-chain…`, "info");
         const tx = await contract.revealVote(proposalId, voteYes, secret);
         await tx.wait();
         localStorage.removeItem(key);
-        toast(`Vote revealed (${voteYes ? "YES ✓" : "NO ✗"}) on-chain!`, "success");
+        toast(`Vote revealed (${voteYes ? "YES" : "NO"}) ✓`, "success");
         await loadProposals();
-      } catch (e) {
-        toast("Reveal failed: " + (e.reason || e.message), "error");
-      }
+      } catch(e) { toast("Reveal failed: " + (e.reason || e.message), "error"); }
     }
 
-    // ─── Request Result ─────────────────────────────────────────────────────────
+    // ─── Finalize ─────────────────────────────────────────────────────────────────
 
     async function requestResult(proposalId) {
       if (!account) { toast("Connect wallet first.", "error"); return; }
-
-      if (CONTRACT_ADDRESS === "YOUR_DEPLOYED_CONTRACT_ADDRESS") {
-        const p = proposals.find(x => x.id === proposalId);
-        if (p) { p.resultRevealed = true; p.passed = Math.random() > 0.4; p.isOpen = false; }
-        renderProposals();
-        toast("Result revealed (demo mode)", "success");
-        return;
-      }
-
       try {
         const ethers   = window.ethers;
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer   = await provider.getSigner();
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-        toast(`<span class="spinner"></span> Finalizing result on-chain…`, "info");
+        toast(`<span class="spinner"></span> Finalizing result…`, "info");
         const tx = await contract.finalizeResult(proposalId);
         await tx.wait();
         toast("Result finalized on-chain ✓", "success");
         await loadProposals();
-      } catch (e) {
-        toast("Failed: " + (e.reason || e.message), "error");
-      }
+      } catch(e) { toast("Failed: " + (e.reason || e.message), "error"); }
     }
 
-    // ─── Render ─────────────────────────────────────────────────────────────────
+    // ─── Render ───────────────────────────────────────────────────────────────────
 
     function renderProposals() {
       const list = document.getElementById("proposalList");
+      document.getElementById("proposalCount").textContent = `${proposals.length} proposal${proposals.length !== 1 ? 's' : ''}`;
       if (!proposals.length) {
-        list.innerHTML = `<div class="empty-state"><div class="icon">🔒</div><p>No proposals yet.<br/>Connect your wallet and create the first one.</p></div>`;
+        list.innerHTML = `<div class="empty-state"><div class="seal">⚖</div><p>No proposals yet.<br/>Connect your wallet to create the first one.</p></div>`;
         return;
       }
-
       list.innerHTML = proposals.map(p => {
         const now = Math.floor(Date.now() / 1000);
         const timeLeft = p.deadline - now;
         const timeStr  = timeLeft > 0 ? formatDuration(timeLeft) : "Ended";
-
-        let statusBadge, actionHtml;
+        let accentClass, statusTag, actionHtml;
 
         if (p.resultRevealed) {
-          const label = p.passed ? "PASSED" : "FAILED";
-          const cls   = p.passed ? "status-passed" : "status-failed";
-          statusBadge = `<span class="status-badge ${cls}">${label}</span>`;
+          accentClass = p.passed ? "passed" : "failed";
+          statusTag   = `<span class="status-tag ${accentClass}">${p.passed ? "Passed" : "Failed"}</span>`;
           actionHtml  = `
-            <div class="result-label">${p.passed ? "✅ Proposal passed" : "❌ Proposal rejected"} — ${p.voterCount} votes cast</div>
-            <div class="result-bar"><div class="result-fill ${p.passed ? 'yes' : 'no'}" style="width:${p.passed ? 70 : 30}%"></div></div>
-          `;
+            <div class="result-display">
+              <div class="result-bar-wrap"><div class="result-bar-fill ${accentClass}" style="width:${p.passed ? 70 : 30}%"></div></div>
+              <div class="result-text ${accentClass}">${p.passed ? "✓ Proposal passed" : "✗ Proposal rejected"} — ${p.voterCount} votes cast</div>
+            </div>`;
         } else if (p.isOpen && timeLeft > 0) {
-          statusBadge = `<span class="status-badge status-open">VOTING OPEN</span>`;
+          accentClass = "open";
+          statusTag   = `<span class="status-tag open">Voting Open</span>`;
           if (p.voted) {
-            actionHtml = `<div class="voted-tag">✓ You voted — tallies encrypted until deadline</div>`;
+            actionHtml = `<div class="voted-note">✓ Vote sealed — hidden until deadline</div>`;
           } else {
             actionHtml = `
-              <div class="vote-row">
-                <button class="btn-yes" onclick="castVote(${p.id}, true)">🔐 Vote YES</button>
-                <button class="btn-no"  onclick="castVote(${p.id}, false)">🔐 Vote NO</button>
-              </div>
-            `;
+              <div class="card-actions">
+                <button class="btn-yes" onclick="castVote(${p.id}, true)">Vote Yes →</button>
+                <button class="btn-no"  onclick="castVote(${p.id}, false)">Vote No →</button>
+              </div>`;
           }
         } else {
-          statusBadge = `<span class="status-badge status-closed">CLOSED</span>`;
-          // Check if user has a stored secret for this proposal
+          accentClass = "closed";
+          statusTag   = `<span class="status-tag closed">Closed</span>`;
           const key = `vote_${CONTRACT_ADDRESS}_${p.id}_${account}`;
-          const storedVote = localStorage.getItem(key);
-          if (storedVote && p.voted) {
+          const hasStored = localStorage.getItem(key);
+          if (hasStored && p.voted) {
             actionHtml = `
-              <div class="vote-row">
-                <button class="btn-reveal" onclick="revealVote(${p.id})">🔓 Reveal My Vote</button>
-                <button class="btn-reveal" onclick="requestResult(${p.id})" style="margin-left:0.5rem">📊 Finalize Result</button>
+              <div class="card-actions">
+                <button class="btn-reveal"   onclick="revealVote(${p.id})">Reveal Vote →</button>
+                <button class="btn-finalize" onclick="requestResult(${p.id})">Finalize Result →</button>
               </div>
-              <div class="voted-tag">Reveal your vote first, then finalize</div>
-            `;
+              <div class="voted-note" style="margin-top:0.5rem">Reveal first, then finalize</div>`;
           } else {
-            actionHtml = `<button class="btn-reveal" onclick="requestResult(${p.id})">📊 Finalize Result</button>`;
+            actionHtml = `<button class="btn-finalize" onclick="requestResult(${p.id})">Finalize Result →</button>`;
           }
         }
 
         return `
-          <div class="card">
-            <div class="proposal-header">
-              <div class="proposal-title">${escHtml(p.title)}</div>
-              ${statusBadge}
+          <div class="proposal-card">
+            <div class="card-accent ${accentClass}"></div>
+            <div class="card-body">
+              <div class="card-top">
+                <div class="card-title">${escHtml(p.title)}</div>
+                ${statusTag}
+              </div>
+              <div class="card-desc">${escHtml(p.description)}</div>
+              <div class="card-meta">
+                <span>By ${shortAddr(p.creator)}</span>
+                <span>${p.voterCount} votes</span>
+                <span>${timeStr}</span>
+              </div>
+              ${actionHtml}
+              <div class="privacy-note">
+                <span class="lock-icon"></span>
+                Tallies sealed until deadline · Commit-reveal protocol
+              </div>
             </div>
-            <div class="proposal-desc">${escHtml(p.description)}</div>
-            <div class="proposal-meta">
-              <span>👤 ${shortAddr(p.creator)}</span>
-              <span>🗳 ${p.voterCount} votes</span>
-              <span>⏱ ${timeStr}</span>
-            </div>
-            ${actionHtml}
-            <div class="enc-indicator">
-              <div class="enc-dot"></div>
-              Tallies encrypted with Zama fhEVM · FHE-protected
-            </div>
-          </div>
-        `;
+          </div>`;
       }).join("");
     }
 
     function renderDemoProposals() {
-      // Seed with illustrative proposals in demo mode
       const now = Math.floor(Date.now() / 1000);
       proposals = [
-        {
-          id: 0, title: "Allocate 5 ETH to Developer Grants Fund",
-          description: "This proposal allocates 5 ETH from the DAO treasury to fund open-source contributors working on core protocol tooling.",
-          creator: "0xdemo...1234", deadline: now + 86000,
-          voterCount: 12, resultRevealed: false, passed: false, voted: false, isOpen: true
-        },
-        {
-          id: 1, title: "Add Community Moderators to Discord",
-          description: "Elect 3 new moderators to help manage the growing community across Discord and Telegram channels.",
-          creator: "0xdemo...5678", deadline: now - 100,
-          voterCount: 28, resultRevealed: true, passed: true, voted: false, isOpen: false
-        }
+        { id: 0, title: "Allocate 5 ETH to Developer Grants Fund", description: "This proposal allocates 5 ETH from the DAO treasury to fund open-source contributors working on core protocol tooling.", creator: "0xdemo...1234", deadline: now + 86000, voterCount: 12, resultRevealed: false, passed: false, voted: false, isOpen: true },
+        { id: 1, title: "Add Community Moderators to Discord", description: "Elect 3 new moderators to help manage the growing community across Discord and Telegram channels.", creator: "0xdemo...5678", deadline: now - 100, voterCount: 28, resultRevealed: true, passed: true, voted: false, isOpen: false }
       ];
       totalVotesCast = 40;
-      renderProposals();
-      updateStats();
+      renderProposals(); updateStats();
     }
 
     function updateStats() {
@@ -920,28 +1074,21 @@
       document.getElementById("statTotal").textContent  = proposals.length;
       document.getElementById("statOpen").textContent   = open;
       document.getElementById("statVoters").textContent = totalVotesCast;
+      document.getElementById("heroTotal").textContent  = proposals.length;
+      document.getElementById("heroOpen").textContent   = open;
+      document.getElementById("heroVotes").textContent  = totalVotesCast;
     }
 
-    // ─── Utils ──────────────────────────────────────────────────────────────────
+    // ─── Utils ────────────────────────────────────────────────────────────────────
 
-    function shortAddr(addr) {
-      if (!addr || addr.length < 10) return addr;
-      return addr.slice(0, 6) + "…" + addr.slice(-4);
+    function shortAddr(a) { return !a || a.length < 10 ? a : a.slice(0,6)+"…"+a.slice(-4); }
+    function formatDuration(s) {
+      if (s < 60) return `${s}s left`;
+      if (s < 3600) return `${Math.floor(s/60)}m left`;
+      if (s < 86400) return `${Math.floor(s/3600)}h left`;
+      return `${Math.floor(s/86400)}d left`;
     }
-
-    function formatDuration(secs) {
-      if (secs < 60)   return `${secs}s left`;
-      if (secs < 3600) return `${Math.floor(secs/60)}m left`;
-      if (secs < 86400)return `${Math.floor(secs/3600)}h left`;
-      return `${Math.floor(secs/86400)}d left`;
-    }
-
-    function escHtml(str) {
-      const d = document.createElement("div");
-      d.appendChild(document.createTextNode(str));
-      return d.innerHTML;
-    }
-
+    function escHtml(str) { const d = document.createElement("div"); d.appendChild(document.createTextNode(str)); return d.innerHTML; }
     function toast(msg, type = "info") {
       const el = document.createElement("div");
       el.className = `toast toast-${type}`;
@@ -950,43 +1097,28 @@
       setTimeout(() => el.remove(), 4500);
     }
 
-    // ─── Boot ───────────────────────────────────────────────────────────────────
+    // ─── Boot ─────────────────────────────────────────────────────────────────────
+
+    document.getElementById("connectBtn").addEventListener("click", () => {
+      if (account) disconnectWallet(); else connectWallet();
+    });
 
     window.addEventListener("load", async () => {
-      // Show demo proposals immediately
       renderDemoProposals();
-
-      // Auto-reconnect if already connected
       if (window.ethereum) {
         const accounts = await window.ethereum.request({ method: "eth_accounts" });
         if (accounts.length) {
           account = accounts[0];
           updateConnectButton();
-          await initFhevm();
           await loadProposals();
         }
-      }
-    });
-
-    // Listen for account changes
-    if (window.ethereum) {
-      window.ethereum.on("accountsChanged", (accs) => {
-        account = accs[0] || null;
-        updateConnectButton();
-        if (account) loadProposals();
-      });
-    }
-
-    // Connect button event
-    document.getElementById("connectBtn").addEventListener("click", function() {
-      if (account) {
-        disconnectWallet();
-      } else {
-        connectWallet();
+        window.ethereum.on("accountsChanged", (accs) => {
+          account = accs[0] || null;
+          updateConnectButton();
+          if (account) loadProposals();
+        });
       }
     });
   </script>
-
-
 </body>
 </html>
