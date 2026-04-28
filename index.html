@@ -845,6 +845,13 @@
       flex-shrink: 0;
     }
 
+    .wallet-icon-img {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
     .wallet-desc {
       font-size: 0.68rem;
       color: var(--muted);
@@ -1012,24 +1019,38 @@
       </div>
       <div class="modal-body">
         <button class="wallet-option" onclick="connectMetaMask()">
-          <div class="wallet-icon" style="background:#fff3e0">🦊</div>
+          <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" class="wallet-icon-img" />
           <div>
             MetaMask
             <span class="wallet-desc">Browser extension wallet</span>
           </div>
         </button>
         <button class="wallet-option" onclick="connectRabby()">
-          <div class="wallet-icon" style="background:#e8f4fd">🐰</div>
+          <img src="https://rabby.io/assets/images/rabby-logo.svg" class="wallet-icon-img" onerror="this.src='https://avatars.githubusercontent.com/u/86867299'" />
           <div>
-            Rabby / Injected
+            Rabby Wallet
             <span class="wallet-desc">Any browser wallet extension</span>
           </div>
         </button>
-        <button class="wallet-option" onclick="connectMobile()">
-          <div class="wallet-icon" style="background:#f3e8ff">📱</div>
+        <button class="wallet-option" onclick="connectRabby()">
+          <img src="https://token.api.cx.metamask.io/assets/nativeCurrencyLogos/zerion.svg" class="wallet-icon-img" onerror="this.src='https://avatars.githubusercontent.com/u/56512535'" />
           <div>
-            Mobile Wallet
-            <span class="wallet-desc">Open in MetaMask, Trust, or Zerion app</span>
+            Zerion
+            <span class="wallet-desc">DeFi wallet & portfolio</span>
+          </div>
+        </button>
+        <button class="wallet-option" onclick="connectRabby()">
+          <img src="https://trustwallet.com/assets/images/media/assets/TWT.png" class="wallet-icon-img" onerror="this.src='https://avatars.githubusercontent.com/u/32179889'" />
+          <div>
+            Trust Wallet
+            <span class="wallet-desc">Mobile & browser wallet</span>
+          </div>
+        </button>
+        <button class="wallet-option" onclick="connectMobile()">
+          <div class="wallet-icon-img" style="background:#f0f0f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;">📱</div>
+          <div>
+            Mobile App
+            <span class="wallet-desc">Open in your wallet's browser</span>
           </div>
         </button>
       </div>
