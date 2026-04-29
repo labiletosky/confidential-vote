@@ -1174,8 +1174,10 @@
       if (!window.ethereum || !account) return;
       try {
         const ethers = window.ethers;
-        provider = new ethers.BrowserProvider(window.ethereum);
-        signer   = await provider.getSigner();
+        const alchemyRPC = "https://eth-sepolia.g.alchemy.com/v2/_2WUxwh_XD3hnRG0ulYYM3m0_saXZJF-";
+        provider = new ethers.JsonRpcProvider(alchemyRPC);
+        const walletProvider = new ethers.BrowserProvider(window.ethereum);
+        signer   = await walletProvider.getSigner();
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
         const count = Number(await contract.proposalCount());
         proposals = []; totalVotesCast = 0;
@@ -1201,8 +1203,8 @@
       if (!desc)  { toast("Description is required.", "error"); return; }
       try {
         const ethers   = window.ethers;
-        provider = new ethers.BrowserProvider(window.ethereum);
-        signer   = await provider.getSigner();
+        const walletProvider = new ethers.BrowserProvider(window.ethereum);
+        signer   = await walletProvider.getSigner();
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
         toast(`<span class="spinner"></span> Submitting proposal…`, "info");
         const tx = await contract.createProposal(title, desc, duration);
@@ -1221,8 +1223,8 @@
       try {
         toast(`<span class="spinner"></span> Sealing your vote on-chain…`, "info");
         const ethers   = window.ethers;
-        provider = new ethers.BrowserProvider(window.ethereum);
-        signer   = await provider.getSigner();
+        const walletProvider = new ethers.BrowserProvider(window.ethereum);
+        signer   = await walletProvider.getSigner();
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
         const secret = ethers.hexlify(ethers.randomBytes(32));
         const commitHash = await contract.generateCommitHash(voteYes, secret);
@@ -1246,8 +1248,8 @@
       try {
         toast(`<span class="spinner"></span> Revealing vote…`, "info");
         const ethers   = window.ethers;
-        provider = new ethers.BrowserProvider(window.ethereum);
-        signer   = await provider.getSigner();
+        const walletProvider = new ethers.BrowserProvider(window.ethereum);
+        signer   = await walletProvider.getSigner();
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
         const tx = await contract.revealVote(proposalId, voteYes, secret);
         await tx.wait();
@@ -1263,8 +1265,8 @@
       if (!account) { toast("Connect wallet first.", "error"); return; }
       try {
         const ethers   = window.ethers;
-        provider = new ethers.BrowserProvider(window.ethereum);
-        signer   = await provider.getSigner();
+        const walletProvider = new ethers.BrowserProvider(window.ethereum);
+        signer   = await walletProvider.getSigner();
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
         toast(`<span class="spinner"></span> Finalizing result…`, "info");
         const tx = await contract.finalizeResult(proposalId);
