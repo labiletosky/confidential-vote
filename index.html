@@ -1061,7 +1061,28 @@
   <div id="toast-container"></div>
 
   <script>
-    // ─── Config ──────────────────────────────────────────────────────────────────
+    // ─── RPC Config ───────────────────────────────────────────────────────────────
+    const SEPOLIA_RPCS = [
+      "https://eth-sepolia.g.alchemy.com/v2/_2WUxwh_XD3hnRG0ulYYM3m0_saXZJF-",
+      "https://rpc.ankr.com/eth_sepolia",
+      "https://sepolia.drpc.org",
+      "https://1rpc.io/sepolia"
+    ];
+
+    async function getProvider() {
+      const ethers = window.ethers;
+      for (const rpc of SEPOLIA_RPCS) {
+        try {
+          const p = new ethers.JsonRpcProvider(rpc);
+          await p.getBlockNumber(); // test it works
+          return p;
+        } catch(e) {
+          console.warn("RPC failed, trying next:", rpc);
+        }
+      }
+      // Fallback to wallet RPC
+      return new ethers.BrowserProvider(window.ethereum);
+    }───
     const CONTRACT_ADDRESS = "0xf572a764e95479948C7D93bd93fA22d3f7A338f0";
     const SEPOLIA_CHAIN_ID = "0xaa36a7";
 
@@ -1174,8 +1195,7 @@
       if (!window.ethereum || !account) return;
       try {
         const ethers = window.ethers;
-        const alchemyRPC = "https://eth-sepolia.g.alchemy.com/v2/_2WUxwh_XD3hnRG0ulYYM3m0_saXZJF-";
-        provider = new ethers.JsonRpcProvider(alchemyRPC);
+        provider = await getProvider();
         const walletProvider = new ethers.BrowserProvider(window.ethereum);
         signer   = await walletProvider.getSigner();
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
@@ -1256,7 +1276,14 @@
         localStorage.removeItem(key);
         toast(`Vote revealed (${voteYes ? "YES" : "NO"}) ✓`, "success");
         await loadProposals();
-      } catch(e) { toast("Reveal failed: " + (e.reason || e.message), "error"); }
+      } catch(e) {
+        const msg = e.reason || e.message || "";
+        if (msg.includes("429") || msg.includes("Too Many")) {
+          toast("RPC rate limit hit. Please change your wallet RPC to Alchemy Sepolia.", "error");
+        } else {
+          toast("Failed: " + msg.slice(0, 80), "error");
+        }
+      }
     }
 
     // ─── Finalize ─────────────────────────────────────────────────────────────────
