@@ -1069,19 +1069,10 @@
       "https://1rpc.io/sepolia"
     ];
 
-    async function getProvider() {
+    function getProvider() {
       const ethers = window.ethers;
-      for (const rpc of SEPOLIA_RPCS) {
-        try {
-          const p = new ethers.JsonRpcProvider(rpc);
-          await p.getBlockNumber(); // test it works
-          return p;
-        } catch(e) {
-          console.warn("RPC failed, trying next:", rpc);
-        }
-      }
-      // Fallback to wallet RPC
-      return new ethers.BrowserProvider(window.ethereum);
+      // Return Alchemy provider directly — no blocking test
+      return new ethers.JsonRpcProvider(SEPOLIA_RPCS[0]);
     }───
     const CONTRACT_ADDRESS = "0xf572a764e95479948C7D93bd93fA22d3f7A338f0";
     const SEPOLIA_CHAIN_ID = "0xaa36a7";
@@ -1195,7 +1186,7 @@
       if (!window.ethereum || !account) return;
       try {
         const ethers = window.ethers;
-        provider = await getProvider();
+        provider = getProvider();
         const walletProvider = new ethers.BrowserProvider(window.ethereum);
         signer   = await walletProvider.getSigner();
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
